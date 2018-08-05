@@ -1,28 +1,467 @@
-#### Collection
+#### java.util.*;
 
 ```
 优质博客文章：https://www.cnblogs.com/gaochundong/p/data_structures_and_asymptotic_analysis.html
 
-      |   List   |   Set   |   Map   |   Queue
-Array
-Linked
-Queue
-Stack
-
-Tree
-Red Black Tree    
-2-3-4 Tree
-Heap
-
+|   List   |   Set   |   Map   |   Queue
+Array  Linked  Queue  Stack
 Hash
-
+Tree  Red Black Tree  2-3-4 Tree  Heap
 Graph
-
 ```
+
+##### 接口
+```
+接口
+  E -> 元素
+  T -> 类型
+  K,V -> 键值对
+package java.util;
+1.Collection
+  public interface Collection<E> extends Iterable<E>
+2.Comparator 比较器
+  @FunctionalInterface
+  public interface Comparator<T>
+    int compare(T o1, T o2);
+3.Iterator 迭代器
+  public interface Iterator<E>
+    boolean hasNext();
+    E next();
+4.ListIterator 双向迭代器
+  public interface ListIterator<E> extends Iterator<E>
+    boolean hasPrevious();
+    E previous();
+5.List 列表
+  public interface List<E> extends Collection<E>
+6.Set 集合
+  public interface Set<E> extends Collection<E>
+7.SortedSet 排序集合
+  public interface SortedSet<E> extends Set<E>
+    Comparator<? super E> comparator();
+8.Map 键值对
+  public interface Map<K,V>
+9.SortedMap 按K排序键值对
+  public interface SortedMap<K,V> extends Map<K,V>
+    Comparator<? super K> comparator();
+10.Queue 队列
+  public interface Queue<E> extends Collection<E>
+11.Deque 双端队列
+  public interface Deque<E> extends Queue<E>
+
+package java.lang;
+1.public interface Iterable<T> 可迭代的
+  Iterator<T> iterator();
+2.public interface Comparable<T> 可比较的
+  public int compareTo(T o);
+```
+##### 抽象类
+```
+1.AbstractCollection
+  public abstract class AbstractCollection<E> implements Collection<E>
+2.AbstractList  
+  public abstract class AbstractList<E> extends AbstractCollection<E> implements List<E>
+3.AbstractSet
+  public abstract class AbstractSet<E> extends AbstractCollection<E> implements Set<E>  
+4.AbstractMap
+  public abstract class AbstractMap<K,V> implements Map<K,V>  
+5.AbstractQueue
+  public abstract class AbstractQueue<E> extends AbstractCollection<E>
+  implements Queue<E>
+6.Calendar 日历
+  public abstract class Calendar implements Serializable, Cloneable, Comparable<Calendar>
+    public static Calendar getInstance() {
+        return createCalendar(TimeZone.getDefault(), Locale.getDefault(Locale.Category.FORMAT));
+    }
+    public final Date getTime() {
+        return new Date(getTimeInMillis());
+    }
+    public long getTimeInMillis() {
+        if (!isTimeSet) {
+            updateTime();
+        }
+        return time;
+    }
+```
+
+##### 实现类
+```
+实现类
+1.Collections
+  public class Collections
+    static class UnmodifiableCollection<E> implements Collection<E>, Serializable {}
+    static class UnmodifiableList<E> extends UnmodifiableCollection<E>
+                                 implements List<E> {}
+    static class UnmodifiableSet<E> extends UnmodifiableCollection<E>
+                                 implements Set<E>, Serializable {}
+    private static class UnmodifiableMap<K,V> implements Map<K,V>, Serializable {}
+
+    static class SynchronizedCollection<E> implements Collection<E>, Serializable {}
+    static class SynchronizedList<E> extends SynchronizedCollection<E>
+                                 implements List<E> {}
+    static class SynchronizedSet<E> extends SynchronizedCollection<E>
+                                 implements Set<E> {}
+    private static class SynchronizedMap<K,V> implements Map<K,V>, Serializable {}
+    
+    public static <T extends Comparable<? super T>> void sort(List<T> list) {
+        list.sort(null);
+    }
+    public static <T> void sort(List<T> list, Comparator<? super T> c) {
+        list.sort(c);
+    }
+    default void sort(Comparator<? super E> c) {
+        Object[] a = this.toArray();
+        Arrays.sort(a, (Comparator) c);
+        ListIterator<E> i = this.listIterator();
+        for (Object e : a) {
+            i.next();
+            i.set((E) e);
+        }
+    }
+2.Arrays
+  public class Arrays
+    public static void sort(int[] a) {
+        // 双路快速排序
+        DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0); 
+    }
+    public static void sort(Object[] a) {
+        if (LegacyMergeSort.userRequested)
+            // 归并排序 To be removed in a future release
+            legacyMergeSort(a);
+        else
+            /** TimSort算法是一种起源于归并排序和插入排序的混合排序算法，设计初衷是为了在真实世界中的各种数据中可以有较好的性能。该算法最初是由Tim Peters于2002年在Python语言中提出的。 */
+            ComparableTimSort.sort(a, 0, a.length, null, 0, 0);
+    }
+    private static void swap(Object[] x, int a, int b) {
+        Object t = x[a];
+        x[a] = x[b];
+        x[b] = t;
+    }
+    public static <T> void sort(T[] a, Comparator<? super T> c) {
+        if (c == null) {
+            sort(a);
+        } else {
+            if (LegacyMergeSort.userRequested)
+                legacyMergeSort(a, c);
+            else
+                TimSort.sort(a, 0, a.length, c, null, 0, 0);
+        }
+    }
+    public static int binarySearch(int[] a, int key) {
+        return binarySearch0(a, 0, a.length, key);
+    }
+    public static int binarySearch(Object[] a, Object key) {
+        return binarySearch0(a, 0, a.length, key);
+    }
+    public static <T> int binarySearch(T[] a, T key, Comparator<? super T> c) {
+        return binarySearch0(a, 0, a.length, key, c);
+    }
+    public static <T> List<T> asList(T... a) {
+        return new ArrayList<>(a); 内部静态类
+    }
+    private static class ArrayList<E> extends AbstractList<E>
+        implements RandomAccess, java.io.Serializable {
+        private final E[] a;
+        不支持add()方法; throw new UnsupportedOperationException();
+    }
+3.ArrayList
+  public class ArrayList<E> extends AbstractList<E>
+    implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
+      transient Object[] elementData; //transient 不被序列化
+      public ArrayList(int initialCapacity) {
+        if (initialCapacity > 0) {
+            // 底层就是一个Object[]数组
+            this.elementData = new Object[initialCapacity];
+        } else if (initialCapacity == 0) {
+            this.elementData = EMPTY_ELEMENTDATA;
+        } else {
+            throw new IllegalArgumentException("Illegal Capacity: "+
+                                               initialCapacity);
+        }
+    }
+    public Object[] toArray() {
+        return Arrays.copyOf(elementData, size);
+    }
+  }
+4.LinkedList 
+  public class LinkedList<E> extends AbstractSequentialList<E>
+    implements List<E>, Deque<E>, Cloneable, java.io.Serializable {
+    private static class Node<E> {
+        E item;
+        Node<E> next;
+        Node<E> prev;
+        // 底层就是一个双向链表
+        Node(Node<E> prev, E element, Node<E> next) {
+            this.item = element;
+            this.next = next;
+            this.prev = prev;
+        }
+    }
+    public boolean add(E e) {
+        linkLast(e); // 最后追加
+        return true;
+    }
+  }      
+5.HashSet
+  public class HashSet<E> extends AbstractSet<E>
+    implements Set<E>, Cloneable, java.io.Serializable {
+    private transient HashMap<E,Object> map;    
+    private static final Object PRESENT = new Object();
+    public HashSet() {
+        map = new HashMap<>();
+    }
+    public boolean add(E e) {
+        return map.put(e, PRESENT)==null;
+    }
+    public boolean remove(Object o) {
+        return map.remove(o)==PRESENT;
+    }
+  }
+6.LinkedHashSet
+  public class LinkedHashSet<E> extends HashSet<E>
+    implements Set<E>, Cloneable, java.io.Serializable {
+    public LinkedHashSet() {
+        super(16, .75f, true); // HashSet的构造方法
+    }
+    HashSet(int initialCapacity, float loadFactor, boolean dummy) {
+        map = new LinkedHashMap<>(initialCapacity, loadFactor);
+    }
+  }      
+7.TreeSet
+  public class TreeSet<E> extends AbstractSet<E>
+    implements NavigableSet<E>, Cloneable, java.io.Serializable {
+    private transient NavigableMap<E,Object> m;
+    private static final Object PRESENT = new Object();
+    public TreeSet() {
+        this(new TreeMap<E,Object>());
+    }
+    public boolean add(E e) {
+        return m.put(e, PRESENT)==null;
+    }
+    public boolean remove(Object o) {
+        return m.remove(o)==PRESENT;
+    }
+  }
+8.HashMap
+  public class HashMap<K,V> extends AbstractMap<K,V>
+    implements Map<K,V>, Cloneable, Serializable {
+    static class Node<K,V> implements Map.Entry<K,V> {
+        final int hash;
+        final K key;
+        V value;
+        Node<K,V> next;
+        // HashMap实现：一个Node<K,V>[]数组 + 一个单向链表
+        Node(int hash, K key, V value, Node<K,V> next) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+    }
+    static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+        TreeNode<K,V> parent;  // red-black tree links
+        TreeNode<K,V> left;
+        TreeNode<K,V> right;
+        TreeNode<K,V> prev;    // needed to unlink next upon deletion
+        boolean red;
+        // HashMap实现：一个TreeNode<K,V>[]数组 + 一个红黑树
+        TreeNode(int hash, K key, V val, Node<K,V> next) {
+            super(hash, key, val, next);
+        }
+    }
+    // 初始化构造方法 默认(16, 0.75f)
+    public HashMap(int initialCapacity, float loadFactor) {
+        if (initialCapacity < 0)
+            throw new IllegalArgumentException("Illegal initial capacity: " +
+                                               initialCapacity);
+        if (initialCapacity > MAXIMUM_CAPACITY)
+            initialCapacity = MAXIMUM_CAPACITY;
+        if (loadFactor <= 0 || Float.isNaN(loadFactor))
+            throw new IllegalArgumentException("Illegal load factor: " +
+                                               loadFactor);
+        this.loadFactor = loadFactor;
+        this.threshold = tableSizeFor(initialCapacity);
+    }
+    static final int hash(Object key) {
+        int h;
+        return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    }
+    public V get(Object key) {
+        Node<K,V> e;
+        return (e = getNode(hash(key), key)) == null ? null : e.value;
+    }
+    public V put(K key, V value) {
+        return putVal(hash(key), key, value, false, true);
+    }
+    final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                   boolean evict) {
+        if (++size > threshold)
+            resize();            
+    }
+    // 非常重要的方法resize()扩容方法 
+    // 并发情况下会有链表指向死循环的情况，导致CPU飙升
+    final Node<K,V>[] resize() {}
+    public Set<Map.Entry<K,V>> entrySet() {
+        Set<Map.Entry<K,V>> es;
+        return (es = entrySet) == null ? (entrySet = new EntrySet()) : es;
+    }
+  }
+9.Hashtable
+  public class Hashtable<K,V> extends Dictionary<K,V>
+    implements Map<K,V>, Cloneable, java.io.Serializable {
+    private static class Entry<K,V> implements Map.Entry<K,V> {
+        final int hash;
+        final K key;
+        V value;
+        Entry<K,V> next;
+        // Hashtable实现：一个Entry<K,V>[]数组 + 一个单向链表
+        protected Entry(int hash, K key, V value, Entry<K,V> next) {
+            this.hash = hash;
+            this.key =  key;
+            this.value = value;
+            this.next = next;
+        }
+    }    
+  }
+10.LinkedHashMap
+  public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V> {
+    static class Entry<K,V> extends HashMap.Node<K,V> {
+        Entry<K,V> before, after;
+        // LinkedHashMap实现：一个Entry<K,V>[]数组 + 一个双向链表
+        Entry(int hash, K key, V value, Node<K,V> next) {
+            super(hash, key, value, next);
+        }
+    }
+    static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+        TreeNode<K,V> parent;  // red-black tree links
+        TreeNode<K,V> left;
+        TreeNode<K,V> right;
+        TreeNode<K,V> prev;    // needed to unlink next upon deletion
+        boolean red;
+        // LinkedHashMap实现：一个TreeNode<K,V>[]数组 + 一个红黑树
+        TreeNode(int hash, K key, V val, Node<K,V> next) {
+            super(hash, key, val, next);
+        }
+    }
+    public LinkedHashMap(int initialCapacity, float loadFactor) {
+        super(initialCapacity, loadFactor); // HashMap的构造方法
+        accessOrder = false; // 是否按照访问顺序，默认插入顺序
+    }
+    public LinkedHashMap(int initialCapacity,float loadFactor,
+        boolean accessOrder) {
+        super(initialCapacity, loadFactor);
+        this.accessOrder = accessOrder; // 初始化时设置遍历顺序
+    }
+    public V get(Object key) {
+        Node<K,V> e;
+        if ((e = getNode(hash(key), key)) == null)
+            return null;
+        if (accessOrder)
+            afterNodeAccess(e); // move node to last
+        return e.value;
+    }
+  }
+11.WeakHashMap
+  public class WeakHashMap<K,V> extends AbstractMap<K,V> implements Map<K,V> {}
+12.TreeMap
+  public class TreeMap<K,V> extends AbstractMap<K,V>
+    implements NavigableMap<K,V>, Cloneable, java.io.Serializable {
+    private final Comparator<? super K> comparator; // 自定义K比较器
+    private transient Entry<K,V> root; // 树的根节点root
+    static final class Entry<K,V> implements Map.Entry<K,V> {
+        K key;
+        V value;
+        Entry<K,V> left;
+        Entry<K,V> right;
+        Entry<K,V> parent;
+        boolean color = BLACK;
+        // 底层是一个红黑树
+        Entry(K key, V value, Entry<K,V> parent) {
+            this.key = key;
+            this.value = value;
+            this.parent = parent;
+        }
+    }
+    public TreeMap() {
+        comparator = null;
+    }
+    public V get(Object key) {
+        Entry<K,V> p = getEntry(key);
+        return (p==null ? null : p.value);
+    }
+    final Entry<K,V> getEntry(Object key) {
+        if (comparator != null)
+            return getEntryUsingComparator(key);
+        int cmp = k.compareTo(p.key); // 实现自内置比较器
+    }
+    final Entry<K,V> getEntryUsingComparator(Object key) {
+        int cmp = cpr.compare(k, p.key); // 实现自外置比较器
+    }
+    final int compare(Object k1, Object k2) {
+        return comparator==null ? 
+          ((Comparable<? super K>)k1).compareTo((K)k2)
+          : comparator.compare((K)k1, (K)k2);
+    }
+  }
+13.PriorityQueue
+14.ArrayDeque
+15.Stack
+16.Vector
+17.Properties
+18.Random
+19.Date
+  public class Date
+  implements java.io.Serializable, Cloneable, Comparable<Date>
+20.ComparableTimSort  
+  class ComparableTimSort {
+
+  }
+21.TimSort  
+  class TimSort<T> {
+
+  }
+```
+
+##### 不可变类
+```
+package java.util;
+1.Objects
+  public final class Objects {
+    public static boolean equals(Object a, Object b) {
+        return (a == b) || (a != null && a.equals(b)); // 引用相等 或者 值相等
+    }
+    public static int hashCode(Object o) {
+        return o != null ? o.hashCode() : 0;
+    }
+    public static <T> int compare(T a, T b, Comparator<? super T> c) {
+        return (a == b) ? 0 :  c.compare(a, b);
+    }
+    public static boolean isNull(Object obj) {
+        return obj == null;
+    }
+    public static boolean nonNull(Object obj) {
+        return obj != null;
+    }
+  }
+顺便介绍下java.lang.Object 和 java.lang.String
+package java.lang;
+public class Object {
+    public boolean equals(Object obj) {
+        return (this == obj);
+    }
+}
+public final class String
+    implements java.io.Serializable, Comparable<String>, CharSequence {
+  
+}
+2.UUID
+3.DualPivotQuicksort
+```
+
 
 - #### java.util.List
 ```
 package java.util;
+
 public interface Collection<E> extends Iterable<E>
 @FunctionalInterface public interface Comparator<T>  
   -> 比较器
