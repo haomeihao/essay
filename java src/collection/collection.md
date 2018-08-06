@@ -1,21 +1,102 @@
-#### java.util.*;
+#### java.util.nodir.*;
 
+##### Summary 总结
 ```
-优质博客文章：https://www.cnblogs.com/gaochundong/p/data_structures_and_asymptotic_analysis.html
+优质博客文章：
+  https://www.cnblogs.com/gaochundong/p/data_structures_and_asymptotic_analysis.html
+解释；
+  E -> 元素
+  T -> 类型
+  K,V -> 键值对
+用到的数据结构：
+  数组(Array)、链表(Linked)、队列(Queue,Deque)、栈(Stack)
+  哈希表(Hash)、二叉树(Tree)、红黑树(Red Black Tree)、堆(Heap)
+  最基本的：数组、链表、红黑树、哈希表
 
-|   List   |   Set   |   Map   |   Queue
-Array  Linked  Queue  Stack
-Hash
-Tree  Red Black Tree  2-3-4 Tree  Heap
-Graph
+单一数据结构实现：
+  ArrayList -> Object[]数组 
+    Vector(ArrayList的线程安全类)
+    Stack extends Vector
+  ArrayDeque -> 基于Object[]数组实现的双端队列
+
+  LinkedList -> Node<E>双向链表
+  
+  TreeMap -> Entry<K,V>红黑树
+    TreeSet
+
+组合数据结构实现：
+  HashMap -> Node<K,V>[]数组 + 单向链表/红黑树
+    HashSet
+  LinkedHashMap -> Entry<K,V>[]数组 + 双向链表/红黑树
+    LinkedHashSet
+
+  PriorityQueue -> 基于Object[]数组实现的完全二叉树，即堆(Heap)
+```
+
+* [1.接口](#_1)
+```
+  Collection
+  Comparator java.lang.Comparable
+  Iterator ListIterator java.lang.Iterable
+  List
+  Set SortedSet
+  Map SortedMap
+  Queue Deque
+```
+
+* [2.抽象类](#_2)
+```
+  AbstractCollection
+  AbstractList
+  AbstractSet
+  AbstractMap
+  AbstractQueue
+  Calendar 日历
+```
+
+* [3.实现类](#_3)
+```
+  Collections
+  Arrays(asList()返回一个ArrayList,自己实现的内部静态类，没有add()方法)
+
+  ArrayList(底层就是一个Object[]数组) Vector  
+  LinkedList(底层就是一个Node<E>双向链表)
+
+  HashSet LinkedHashSet TreeSet
+
+  HashMap(一个Node<K,V>[]数组 + 一个单向链表或者一个红黑树) Hashtable
+    非常重要的方法resize()，
+    扩容方法，并发情况下会有链表指向死循环的情况，导致CPU飙升。
+  LinkedHashMap(一个Entry<K,V>[]数组 + 一个双向链表或者一个红黑树) 
+    是否按照访问顺序遍历，默认插入顺序
+  TreeMap(底层是一个Entry<K,V>红黑树)
+    K要实现实现自内置比较器，或者比较时自定义实现外置比较器
+
+  PriorityQueue(基于Object[]数组实现的完全二叉树(最大,最小),即堆(最大,最小))
+    heapify()方法使Object[]数组进行堆化
+  ArrayDeque(基于Object[]数组实现的双端队列)
+
+  Stack extends Vector
+  Properties extends Hashtable
+
+  Random
+  Date 日期
+```
+
+* [4.不可变类](#_4)
+```
+  Objects
+  java.lang.Object(引用是否相等 equals(){==}) 
+  java.lang.String(引用是否相等 是否都是String对象 值是否相等)
+    如果是基本数据类型，就是equals() == 都是比较的值相等
+    如果是引用数据类型，就是equals() 比较的值相等 ==比较引用相等 不一样
+    Object类的equals()方法比较的是==引用是否相等
+    子类重写了equals()方法，比较的是值相等，不是==
+  UUID
 ```
 
 ##### 接口
 ```
-接口
-  E -> 元素
-  T -> 类型
-  K,V -> 键值对
 package java.util;
 1.Collection
   public interface Collection<E> extends Iterable<E>
@@ -54,6 +135,7 @@ package java.lang;
 2.public interface Comparable<T> 可比较的
   public int compareTo(T o);
 ```
+
 ##### 抽象类
 ```
 1.AbstractCollection
@@ -268,7 +350,7 @@ package java.lang;
             super(hash, key, val, next);
         }
     }
-    // 初始化构造方法 默认(16, 0.75f)
+    // 初始化构造方法 默认(16, .75f)
     public HashMap(int initialCapacity, float loadFactor) {
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Illegal initial capacity: " +
@@ -305,7 +387,7 @@ package java.lang;
         return (es = entrySet) == null ? (entrySet = new EntrySet()) : es;
     }
   }
-9.Hashtable
+9.Hashtable HashMap的线程安全实现 方法上加了synchronized关键字
   public class Hashtable<K,V> extends Dictionary<K,V>
     implements Map<K,V>, Cloneable, java.io.Serializable {
     private static class Entry<K,V> implements Map.Entry<K,V> {
@@ -402,23 +484,92 @@ package java.lang;
           : comparator.compare((K)k1, (K)k2);
     }
   }
-13.PriorityQueue
-14.ArrayDeque
-15.Stack
-16.Vector
-17.Properties
+13.PriorityQueue 
+  优先级队列：基于Object[]数组实现的完全二叉树(最大,最小),即堆(最大,最小)
+  public class PriorityQueue<E> extends AbstractQueue<E>
+    implements java.io.Serializable {
+    private static final int DEFAULT_INITIAL_CAPACITY = 11;
+    transient Object[] queue;
+    private final Comparator<? super E> comparator;
+    public PriorityQueue() {
+        this(DEFAULT_INITIAL_CAPACITY, null);
+    }
+    public PriorityQueue(int initialCapacity) {
+        this(initialCapacity, null);
+    }
+    public PriorityQueue(Comparator<? super E> comparator) {
+        this(DEFAULT_INITIAL_CAPACITY, comparator);
+    }
+    public PriorityQueue(int initialCapacity,Comparator<? super E> comparator) {
+        if (initialCapacity < 1)
+            throw new IllegalArgumentException();
+        this.queue = new Object[initialCapacity];
+        this.comparator = comparator;
+    }
+    private void heapify() { // Object[]数组进行堆化
+        for (int i = (size >>> 1) - 1; i >= 0; i--)
+            siftDown(i, (E) queue[i]);
+    }
+    siftUp siftUpComparable siftUpUsingComparator
+    siftDown siftDownComparable siftDownUsingComparator
+  }
+14.ArrayDeque 基于Object[]数组实现的双端队列 elements[head] elements[tail]
+  public class ArrayDeque<E> extends AbstractCollection<E>
+    implements Deque<E>, Cloneable, Serializable {
+    transient Object[] elements;
+    transient int head;
+    transient int tail;
+    private static final int MIN_INITIAL_CAPACITY = 8;
+    public ArrayDeque() {
+        elements = new Object[16];
+    }
+  }
+15.Vector ArrayList的线程安全实现 方法上加了synchronized关键字
+  public class Vector<E> extends AbstractList<E>
+    implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
+    protected Object[] elementData;
+  }
+16.Stack 栈 线程安全的Object[]实现，操作方法做了阉割
+  public class Stack<E> extends Vector<E> {}
+17.Properties 借用了Hashtable的实现方法，加上了自己的一些方法load() store()...
+  public class Properties extends Hashtable<Object,Object> {}
 18.Random
+  public class Random implements java.io.Serializable {
+    private final AtomicLong seed;
+    public int nextInt() {
+        return next(32);
+    }
+    public long nextLong() {
+        return ((long)(next(32)) << 32) + next(32);
+    }
+  }
 19.Date
   public class Date
-  implements java.io.Serializable, Cloneable, Comparable<Date>
+  implements java.io.Serializable, Cloneable, Comparable<Date> {
+    private transient long fastTime;
+    public Date() {
+        this(System.currentTimeMillis());
+    }
+    public Date(long date) {
+        fastTime = date;
+    }
+    public long getTime() {
+        return getTimeImpl();
+    }
+    private final long getTimeImpl() {
+        if (cdate != null && !cdate.isNormalized()) {
+            normalize();
+        }
+        return fastTime;
+    }
+    public boolean equals(Object obj) {
+        return obj instanceof Date && getTime() == ((Date) obj).getTime();
+    }
+  }
 20.ComparableTimSort  
-  class ComparableTimSort {
-
-  }
+  class ComparableTimSort {}
 21.TimSort  
-  class TimSort<T> {
-
-  }
+  class TimSort<T> {}
 ```
 
 ##### 不可变类
@@ -446,22 +597,41 @@ package java.util;
 package java.lang;
 public class Object {
     public boolean equals(Object obj) {
-        return (this == obj);
+        return (this == obj); // 引用是否相等
     }
 }
 public final class String
     implements java.io.Serializable, Comparable<String>, CharSequence {
-  
+    public boolean equals(Object anObject) {
+        if (this == anObject) { // 引用是否相等
+            return true;
+        }
+        if (anObject instanceof String) { // 是否都是String对象
+            String anotherString = (String)anObject;
+            int n = value.length;
+            if (n == anotherString.value.length) {
+                char v1[] = value;
+                char v2[] = anotherString.value;
+                int i = 0;
+                while (n-- != 0) {
+                    if (v1[i] != v2[i])
+                        return false; // 判断String对象的字符是否都对应相等
+                    i++;
+                }
+                return true; // 值是否相等
+            }
+        }
+        return false;
+    }
 }
 2.UUID
+  public final class UUID implements java.io.Serializable, Comparable<UUID> {}
 3.DualPivotQuicksort
+  final class DualPivotQuicksort {} 都是排序算法的方法
 ```
 
-
-- #### java.util.List
+##### 总结(废弃)
 ```
-package java.util;
-
 public interface Collection<E> extends Iterable<E>
 @FunctionalInterface public interface Comparator<T>  
   -> 比较器
